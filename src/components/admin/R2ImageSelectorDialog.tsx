@@ -74,17 +74,21 @@ export default function R2ImageSelectorDialog({
   };
 
   const handleImageClick = (url: string) => {
-    if (multiple) {
-      setSelectedUrls(prev => {
-        const isSelected = prev.includes(url);
-        if (isSelected) {
-          return prev.filter(u => u !== url);
-        } else {
-          return [...prev, url];
-        }
-      });
-    } else {
-      setSelectedUrls([url]);
+    try {
+      if (multiple) {
+        setSelectedUrls(prev => {
+          const isSelected = prev.includes(url);
+          if (isSelected) {
+            return prev.filter(u => u !== url);
+          } else {
+            return [...prev, url];
+          }
+        });
+      } else {
+        setSelectedUrls([url]);
+      }
+    } catch (error) {
+      console.error('[v0] Error selecting image:', error);
     }
   };
 

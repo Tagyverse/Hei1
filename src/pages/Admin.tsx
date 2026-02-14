@@ -423,19 +423,35 @@ export default function Admin() {
     }
 
     try {
+      if (!user) {
+        console.error('[ADMIN] User not authenticated');
+        alert('You must be logged in to save products. Please sign in with Google.');
+        return;
+      }
+
+      console.log('[ADMIN] Saving product with user:', user.uid);
+      
       if (editingProduct) {
         const productRef = ref(db, `products/${editingProduct.id}`);
         await set(productRef, productData);
+        console.log('[ADMIN] Product updated:', editingProduct.id);
       } else {
         const productsRef = ref(db, 'products');
-        await push(productsRef, productData);
+        const newProductRef = await push(productsRef, productData);
+        console.log('[ADMIN] Product created:', newProductRef.key);
       }
 
       await fetchData();
       resetForm();
-    } catch (error) {
-      console.error('Error saving product:', error);
-      alert('Failed to save product. Please try again.');
+    } catch (error: any) {
+      console.error('[ADMIN] Error saving product:', error);
+      console.error('[ADMIN] Error code:', error.code);
+      console.error('[ADMIN] Error message:', error.message);
+      if (error.code === 'PERMISSION_DENIED') {
+        alert('Permission denied. Make sure you are authenticated and have admin access.');
+      } else {
+        alert('Failed to save product. Please try again. Error: ' + error.message);
+      }
     }
   };
 
@@ -472,56 +488,106 @@ export default function Admin() {
     if (!confirm('Are you sure you want to delete this product?')) return;
 
     try {
+      if (!user) {
+        alert('You must be logged in to delete products.');
+        return;
+      }
+      
       const productRef = ref(db, `products/${productId}`);
       await remove(productRef);
+      console.log('[ADMIN] Product deleted:', productId);
       await fetchData();
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      alert('Failed to delete product');
+    } catch (error: any) {
+      console.error('[ADMIN] Error deleting product:', error);
+      if (error.code === 'PERMISSION_DENIED') {
+        alert('Permission denied. Make sure you are authenticated.');
+      } else {
+        alert('Failed to delete product: ' + error.message);
+      }
     }
   };
 
   const toggleProductFeatured = async (product: Product) => {
     try {
+      if (!user) {
+        alert('You must be logged in to update products.');
+        return;
+      }
+      
       const productRef = ref(db, `products/${product.id}`);
       await update(productRef, { featured: !product.featured });
+      console.log('[ADMIN] Product featured toggled:', product.id);
       await fetchData();
-    } catch (error) {
-      console.error('Error toggling featured status:', error);
-      alert('Failed to update featured status');
+    } catch (error: any) {
+      console.error('[ADMIN] Error toggling featured status:', error);
+      if (error.code === 'PERMISSION_DENIED') {
+        alert('Permission denied: ' + error.message);
+      } else {
+        alert('Failed to update featured status: ' + error.message);
+      }
     }
   };
 
   const toggleProductStock = async (product: Product) => {
     try {
+      if (!user) {
+        alert('You must be logged in to update products.');
+        return;
+      }
+      
       const productRef = ref(db, `products/${product.id}`);
       await update(productRef, { in_stock: !product.in_stock });
+      console.log('[ADMIN] Product stock toggled:', product.id);
       await fetchData();
-    } catch (error) {
-      console.error('Error toggling stock status:', error);
-      alert('Failed to update stock status');
+    } catch (error: any) {
+      console.error('[ADMIN] Error toggling stock status:', error);
+      if (error.code === 'PERMISSION_DENIED') {
+        alert('Permission denied: ' + error.message);
+      } else {
+        alert('Failed to update stock status: ' + error.message);
+      }
     }
   };
 
   const toggleProductBestSelling = async (product: Product) => {
     try {
+      if (!user) {
+        alert('You must be logged in to update products.');
+        return;
+      }
+      
       const productRef = ref(db, `products/${product.id}`);
       await update(productRef, { best_selling: !product.best_selling });
+      console.log('[ADMIN] Product best selling toggled:', product.id);
       await fetchData();
-    } catch (error) {
-      console.error('Error toggling best selling status:', error);
-      alert('Failed to update best selling status');
+    } catch (error: any) {
+      console.error('[ADMIN] Error toggling best selling status:', error);
+      if (error.code === 'PERMISSION_DENIED') {
+        alert('Permission denied: ' + error.message);
+      } else {
+        alert('Failed to update best selling status: ' + error.message);
+      }
     }
   };
 
   const toggleProductMightYouLike = async (product: Product) => {
     try {
+      if (!user) {
+        alert('You must be logged in to update products.');
+        return;
+      }
+      
       const productRef = ref(db, `products/${product.id}`);
       await update(productRef, { might_you_like: !product.might_you_like });
+      console.log('[ADMIN] Product might you like toggled:', product.id);
       await fetchData();
-    } catch (error) {
-      console.error('Error toggling might you like status:', error);
-      alert('Failed to update might you like status');
+    } catch (error: any) {
+      console.error('[ADMIN] Error toggling might you like status:', error);
+      if (error.code === 'PERMISSION_DENIED') {
+        alert('Permission denied: ' + error.message);
+      } else {
+        alert('Failed to update might you like status: ' + error.message);
+      }
     }
   };
 
@@ -566,19 +632,35 @@ export default function Admin() {
     };
 
     try {
+      if (!user) {
+        console.error('[ADMIN] User not authenticated for category save');
+        alert('You must be logged in to save categories. Please sign in with Google.');
+        return;
+      }
+
+      console.log('[ADMIN] Saving category with user:', user.uid);
+      
       if (editingCategory) {
         const categoryRef = ref(db, `categories/${editingCategory.id}`);
         await set(categoryRef, categoryData);
+        console.log('[ADMIN] Category updated:', editingCategory.id);
       } else {
         const categoriesRef = ref(db, 'categories');
-        await push(categoriesRef, categoryData);
+        const newCategoryRef = await push(categoriesRef, categoryData);
+        console.log('[ADMIN] Category created:', newCategoryRef.key);
       }
 
       await fetchData();
       resetCategoryForm();
-    } catch (error) {
-      console.error('Error saving category:', error);
-      alert('Failed to save category. Please try again.');
+    } catch (error: any) {
+      console.error('[ADMIN] Error saving category:', error);
+      console.error('[ADMIN] Error code:', error.code);
+      console.error('[ADMIN] Error message:', error.message);
+      if (error.code === 'PERMISSION_DENIED') {
+        alert('Permission denied. Make sure you are authenticated and have admin access.');
+      } else {
+        alert('Failed to save category. Please try again. Error: ' + error.message);
+      }
     }
   };
 
@@ -599,23 +681,43 @@ export default function Admin() {
     if (!confirm('Are you sure you want to delete this category?')) return;
 
     try {
+      if (!user) {
+        alert('You must be logged in to delete categories.');
+        return;
+      }
+      
       const categoryRef = ref(db, `categories/${categoryId}`);
       await remove(categoryRef);
+      console.log('[ADMIN] Category deleted:', categoryId);
       await fetchData();
-    } catch (error) {
-      console.error('Error deleting category:', error);
-      alert('Failed to delete category');
+    } catch (error: any) {
+      console.error('[ADMIN] Error deleting category:', error);
+      if (error.code === 'PERMISSION_DENIED') {
+        alert('Permission denied: ' + error.message);
+      } else {
+        alert('Failed to delete category: ' + error.message);
+      }
     }
   };
 
   const toggleCategoryFeatured = async (category: Category) => {
     try {
+      if (!user) {
+        alert('You must be logged in to update categories.');
+        return;
+      }
+      
       const categoryRef = ref(db, `categories/${category.id}`);
       await update(categoryRef, { featured: !category.featured });
+      console.log('[ADMIN] Category featured toggled:', category.id);
       await fetchData();
-    } catch (error) {
-      console.error('Error toggling featured status:', error);
-      alert('Failed to update featured status');
+    } catch (error: any) {
+      console.error('[ADMIN] Error toggling featured status:', error);
+      if (error.code === 'PERMISSION_DENIED') {
+        alert('Permission denied: ' + error.message);
+      } else {
+        alert('Failed to update featured status: ' + error.message);
+      }
     }
   };
 

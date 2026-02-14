@@ -15,17 +15,17 @@ function getSessionId(): string {
 }
 
 /**
- * Track page view to KV via API endpoint
+ * Track page view to KV via API endpoint - Real data tracking
  */
 export async function trackPageView(path: string, metadata?: Record<string, any>) {
   try {
     const sessionId = getSessionId();
     const userId = localStorage.getItem('userId');
 
-    console.log('[v0] Tracking page view:', path);
+    console.log('[v0] REAL PAGE VIEW TRACKING - Path:', path, 'Session:', sessionId, 'Time:', new Date().toISOString());
 
     // Log to KV API endpoint (fire and forget)
-    const response = fetch('/api/track-view', {
+    fetch('/api/track-view', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -38,9 +38,7 @@ export async function trackPageView(path: string, metadata?: Record<string, any>
         timestamp: new Date().toISOString(),
         metadata,
       }),
-    });
-
-    response
+    })
       .then(res => {
         if (res.ok) {
           console.log('[v0] Page view recorded:', path);
@@ -55,7 +53,7 @@ export async function trackPageView(path: string, metadata?: Record<string, any>
 }
 
 /**
- * Track custom events to KV via API endpoint
+ * Track custom events to KV via API endpoint - Real data tracking
  */
 export async function trackEvent(
   eventType: string,
@@ -65,10 +63,10 @@ export async function trackEvent(
     const sessionId = getSessionId();
     const userId = localStorage.getItem('userId');
 
-    console.log('[v0] Tracking event:', eventType, eventData);
+    console.log('[v0] REAL EVENT TRACKING - Type:', eventType, 'Data:', eventData, 'Session:', sessionId, 'Time:', new Date().toISOString());
 
     // Log to KV API endpoint (fire and forget)
-    const response = fetch('/api/track-event', {
+    fetch('/api/track-event', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -80,9 +78,7 @@ export async function trackEvent(
         timestamp: new Date().toISOString(),
         data: eventData,
       }),
-    });
-
-    response
+    })
       .then(res => {
         if (res.ok) {
           console.log('[v0] Event recorded:', eventType);

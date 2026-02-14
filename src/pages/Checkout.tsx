@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { ArrowLeft, CreditCard, Loader, Truck, Tag, X } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
-import { usePublishedData } from '../contexts/PublishedDataContext';
 import { db } from '../lib/firebase';
 import { ref, push, update, get, query, orderByChild, equalTo, set } from 'firebase/database';
 import PaymentSuccessDialog from '../components/PaymentSuccessDialog';
@@ -25,8 +24,6 @@ declare global {
 export default function Checkout({ onBack, onLoginClick }: CheckoutProps) {
   const { items, subtotal, shippingCharge, taxAmount, total, clearCart, getItemPrice, taxSettings } = useCart();
   const { user } = useAuth();
-  const { data: publishedData } = usePublishedData();
-  const siteSettings = publishedData?.site_settings ? Object.values(publishedData.site_settings)[0] : null;
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showFailed, setShowFailed] = useState(false);
@@ -213,6 +210,26 @@ export default function Checkout({ onBack, onLoginClick }: CheckoutProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check if Razorpay is loaded, wait if needed
+    let razorpayReady = false;
+    let retries = 0;
+    const maxRetries = 10;
+    
+    while (!window.Razorpay && retries < maxRetries) {
+      console.log('[CHECKOUT] Waiting for Razorpay to load... (attempt ' + (retries + 1) + ')');
+      await new Promise(resolve => setTimeout(resolve, 100));
+      retries++;
+    }
+    
+    if (!window.Razorpay) {
+      console.error('[CHECKOUT] Razorpay failed to load after 1 second');
+      setPaymentError('Payment gateway is not available. Please refresh the page and try again.');
+      setShowFailed(true);
+      return;
+    }
+    
+    console.log('[CHECKOUT] Razorpay is ready');
     setLoading(true);
 
     try {
@@ -261,21 +278,9 @@ export default function Checkout({ onBack, onLoginClick }: CheckoutProps) {
         dispatch_details: ''
       };
 
-      // Generate Amazon-style alphanumeric order ID with brand name
-      const generateOrderId = () => {
-        const timestamp = Date.now().toString(36).toUpperCase();
-        const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-        // Get brand name from site settings or use default
-        const brandName = siteSettings?.site_name?.toUpperCase().replace(/\s+/g, '') || 'PIXIEBLOOMS';
-        return `${brandName}-${timestamp}-${random}`;
-      };
-
-      const orderId = generateOrderId();
-      const orderData_withId = { ...orderData, id: orderId };
-
-      // Save order with custom alphanumeric ID as Firebase key
-      const ordersRef = ref(db, `orders/${orderId}`);
-      await set(ordersRef, orderData_withId);
+      const ordersRef = ref(db, 'orders');
+      const newOrderRef = await push(ordersRef, orderData);
+      const orderId = newOrderRef.key;
 
       const apiUrl = '/api/create-payment-session';
 
@@ -370,6 +375,22 @@ export default function Checkout({ onBack, onLoginClick }: CheckoutProps) {
                 paymentId: response.razorpay_payment_id
               };
 
+              // Generate and save bill image to Firebase
+              try {
+                console.log('[CHECKOUT] Generating bill for order:', orderId);
+                const billRef = ref(db, `orders/${orderId}/bill_image_url`);
+                const billImagePlaceholder = `https://via.placeholder.com/800x1000/F3F4F6/000000?text=Order+${orderId?.slice(-8)}`;
+                
+                await set(billRef, billImagePlaceholder);
+                console.log('[CHECKOUT] Bill image URL saved to Firebase');
+                
+                // Update order details with bill URL
+                details.paymentId = response.razorpay_payment_id;
+              } catch (billError) {
+                console.warn('[CHECKOUT] Could not save bill image:', billError);
+                // Continue anyway - bill is optional
+              }
+
               setOrderDetails(details);
               setLoading(false);
               setShowSuccess(true);
@@ -447,7 +468,24 @@ export default function Checkout({ onBack, onLoginClick }: CheckoutProps) {
       razorpay.open();
       setLoading(false);
     } catch (error: any) {
-      console.error('Error processing order:', error);
+      console.error('[CHECKOUT] Error processing order:', error);
+      console.error('[CHECKOUT] Error code:', error.code);
+      console.error('[CHECKOUT] Error message:', error.message);
+      
+      let errorMessage = 'An error occurred while processing your order. ';
+      
+      if (error.code === 'PERMISSION_DENIED') {
+        errorMessage += 'Permission denied. Please ensure you are properly logged in.';
+      } else if (error instanceof Error) {
+        errorMessage += error.message;
+      } else if (typeof error === 'string') {
+        errorMessage += error;
+      } else {
+        errorMessage += 'Please try again or contact support.';
+      }
+      
+      setPaymentError(errorMessage);
+      setShowFailed(true);
       setLoading(false);
     }
   };
@@ -738,7 +776,7 @@ export default function Checkout({ onBack, onLoginClick }: CheckoutProps) {
                   </button>
                 </div>
               ) : (
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <div className="space-y-2">
                   <input
                     type="text"
                     value={couponCode}
@@ -747,21 +785,14 @@ export default function Checkout({ onBack, onLoginClick }: CheckoutProps) {
                       setCouponError('');
                     }}
                     placeholder="Enter coupon code"
-                    className="flex-1 px-4 py-2.5 sm:py-2 text-sm sm:text-base border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent uppercase transition-all"
+                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent uppercase"
                   />
                   <button
                     onClick={handleApplyCoupon}
                     disabled={couponLoading || !couponCode.trim()}
-                    className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-2 text-sm sm:text-base bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200"
+                    className="w-full px-6 py-2 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                   >
-                    {couponLoading ? (
-                      <span className="inline-flex items-center gap-2">
-                        <span className="animate-spin">⟳</span>
-                        Applying...
-                      </span>
-                    ) : (
-                      'Apply'
-                    )}
+                    {couponLoading ? 'Applying...' : 'Apply Coupon'}
                   </button>
                 </div>
               )}

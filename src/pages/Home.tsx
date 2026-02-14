@@ -193,13 +193,14 @@ export default function Home({ onNavigate, onCartClick }: HomeProps) {
           const videoSectionsData: any[] = [];
           if (publishedData.video_sections) {
             Object.entries(publishedData.video_sections).forEach(([id, videoData]: [string, any]) => {
-              if (videoData.isVisible) {
+              if (videoData.is_visible || videoData.isVisible) {
                 videoSectionsData.push({ id, ...videoData });
               }
             });
-            videoSectionsData.sort((a, b) => a.order - b.order);
+            videoSectionsData.sort((a, b) => (a.order || 0) - (b.order || 0));
           }
           setVideoSections(videoSectionsData);
+          console.log('[v0] Video sections loaded:', videoSectionsData.length);
 
           let videoSettings = {
             is_visible: false,
@@ -210,6 +211,7 @@ export default function Home({ onNavigate, onCartClick }: HomeProps) {
           if (publishedData.video_section_settings) {
             videoSettings = { ...videoSettings, ...publishedData.video_section_settings };
             setVideoSectionSettings(videoSettings);
+            console.log('[v0] Video section settings:', videoSettings);
           }
 
           const videoOverlaySectionsData: any[] = [];
@@ -586,7 +588,7 @@ export default function Home({ onNavigate, onCartClick }: HomeProps) {
             </section>
           )}
 
-          {section.type === 'video' && videoSections.length > 0 && (
+          {section.type === 'video' && videoSections.length > 0 && videoSectionSettings.is_visible && (
             <VideoSection
               videos={videoSections}
               title={videoSectionSettings.section_title}

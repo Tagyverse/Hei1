@@ -1,11 +1,12 @@
 {
   "rules": {
-    ".read": false,
+    ".read": true,
     ".write": false,
 
     "products": {
       ".read": true,
       ".indexOn": ["category_id", "featured", "best_selling", "might_you_like", "createdAt", "in_stock"],
+      ".write": "auth != null && (root.child('allowed_admins').child(auth.uid).exists() || auth.token.email === 'tinytrickschannel@gmail.com' || auth.token.email === 'pixieblooms2512@gmail.com')",
       "$productId": {
         ".write": "auth != null",
         ".validate": "(!data.exists() && newData.hasChildren(['name', 'description', 'price', 'image_url', 'in_stock', 'createdAt']) && (newData.hasChild('category_id') || newData.hasChild('category_ids'))) || (data.exists() && newData.hasChild('name') && newData.hasChild('description') && newData.hasChild('price') && newData.hasChild('image_url') && newData.hasChild('in_stock') && newData.hasChild('createdAt') && (newData.hasChild('category_id') || newData.hasChild('category_ids')))",
@@ -90,8 +91,9 @@
     "categories": {
       ".read": true,
       ".indexOn": ["name"],
+      ".write": "auth != null && (root.child('allowed_admins').child(auth.uid).exists() || auth.token.email === 'tinytrickschannel@gmail.com' || auth.token.email === 'pixieblooms2512@gmail.com')",
       "$categoryId": {
-        ".write": "auth != null",
+        ".write": "auth != null && (root.child('allowed_admins').child(auth.uid).exists() || auth.token.email === 'tinytrickschannel@gmail.com' || auth.token.email === 'pixieblooms2512@gmail.com')",
         ".validate": "newData.hasChildren(['name', 'description', 'image_url'])",
         "name": {
           ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"
@@ -184,9 +186,9 @@
     },
 
     "orders": {
-      ".read": "auth != null",
+      ".read": true,
       "$orderId": {
-        ".read": "auth != null",
+        ".read": true,
         ".write": "!data.exists() || auth != null",
         ".validate": "newData.hasChildren(['userId', 'items', 'totalAmount', 'status', 'createdAt']) || newData.hasChildren(['customer_name', 'customer_email', 'customer_phone', 'shipping_address', 'total_amount', 'payment_status', 'order_status', 'created_at', 'order_items']) || newData.hasChildren(['user_id', 'customer_name', 'customer_email', 'customer_phone', 'shipping_address', 'total_amount', 'payment_status', 'order_status', 'created_at', 'order_items'])",
         "userId": {
@@ -355,7 +357,7 @@
     "policies": {
       ".read": true,
       "$policyKey": {
-        ".write": "auth != null",
+        ".write": "auth != null && (auth.token.email === 'tinytrickschannel@gmail.com' || auth.token.email === 'pixieblooms2512@gmail.com')",
         ".validate": "newData.hasChildren(['title', 'content', 'isEnabled'])",
         "title": {
           ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 200"
@@ -376,7 +378,7 @@
       ".read": true,
       ".indexOn": ["productId", "isApproved", "createdAt"],
       "$reviewId": {
-        ".write": "auth != null",
+        ".write": "auth != null && (auth.token.email === 'tinytrickschannel@gmail.com' || auth.token.email === 'pixieblooms2512@gmail.com')",
         ".validate": "newData.hasChildren(['userId', 'productId', 'rating', 'comment', 'createdAt']) || newData.hasChildren(['customer_name', 'review_text', 'is_active', 'created_at'])",
         "userId": {
           ".validate": "!newData.exists() || newData.isString()"
@@ -405,7 +407,7 @@
     "site_settings": {
       ".read": true,
       "$settingKey": {
-        ".write": "auth != null",
+        ".write": "auth != null && (auth.token.email === 'tinytrickschannel@gmail.com' || auth.token.email === 'pixieblooms2512@gmail.com')",
         "site_name": {
           ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 200)"
         },
@@ -490,13 +492,13 @@
     "site_content": {
       ".read": true,
       "$contentKey": {
-        ".write": "auth != null"
+        ".write": "auth != null && (auth.token.email === 'tinytrickschannel@gmail.com' || auth.token.email === 'pixieblooms2512@gmail.com')"
       }
     },
 
     "social_links": {
       ".read": true,
-      ".write": "auth != null",
+      ".write": "auth != null && (auth.token.email === 'tinytrickschannel@gmail.com' || auth.token.email === 'pixieblooms2512@gmail.com')",
       "$linkId": {
         ".validate": "newData.hasChildren(['platform', 'url', 'icon', 'order'])",
         "platform": {
@@ -520,11 +522,11 @@
     "settings": {
       ".read": true,
       "$settingId": {
-        ".write": "auth != null"
+        ".write": "auth != null && (auth.token.email === 'tinytrickschannel@gmail.com' || auth.token.email === 'pixieblooms2512@gmail.com')"
       },
       "shipping_price": {
         ".read": true,
-        ".write": "auth != null",
+        ".write": "auth != null && (auth.token.email === 'tinytrickschannel@gmail.com' || auth.token.email === 'pixieblooms2512@gmail.com')",
         ".validate": "newData.isNumber() && newData.val() >= 0"
       }
     },
@@ -532,20 +534,20 @@
     "offers": {
       ".read": true,
       "$offerId": {
-        ".write": "auth != null"
+        ".write": "auth != null && (auth.token.email === 'tinytrickschannel@gmail.com' || auth.token.email === 'pixieblooms2512@gmail.com')"
       }
     },
 
     "marquee": {
       ".read": true,
-      ".write": "auth != null"
+      ".write": "auth != null && (auth.token.email === 'tinytrickschannel@gmail.com' || auth.token.email === 'pixieblooms2512@gmail.com')"
     },
 
     "coupons": {
       ".read": true,
       ".indexOn": ["code", "is_active", "valid_from", "valid_until"],
       "$couponId": {
-        ".write": "auth != null",
+        ".write": "auth != null && (auth.token.email === 'tinytrickschannel@gmail.com' || auth.token.email === 'pixieblooms2512@gmail.com')",
         ".validate": "newData.hasChildren(['code', 'discount_type', 'discount_value', 'is_active', 'created_at'])",
         "code": {
           ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 50"
@@ -596,7 +598,7 @@
       ".read": true,
       ".indexOn": ["order_index", "is_visible"],
       "$sectionId": {
-        ".write": "auth != null",
+        ".write": "auth != null && (auth.token.email === 'tinytrickschannel@gmail.com' || auth.token.email === 'pixieblooms2512@gmail.com')",
         ".validate": "newData.hasChildren(['title', 'content_type', 'display_type', 'selected_items', 'is_visible', 'order_index', 'created_at', 'updated_at'])",
         "title": {
           ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 200"
@@ -633,7 +635,7 @@
 
     "default_sections_visibility": {
       ".read": true,
-      ".write": "auth != null",
+      ".write": "auth != null && (auth.token.email === 'tinytrickschannel@gmail.com' || auth.token.email === 'pixieblooms2512@gmail.com')",
       "banner_social": {
         ".validate": "!newData.exists() || newData.isBoolean()"
       },
@@ -691,7 +693,7 @@
       ".read": true,
       ".indexOn": ["order_index", "is_visible"],
       "$sectionId": {
-        ".write": "auth != null",
+        ".write": "auth != null && (auth.token.email === 'tinytrickschannel@gmail.com' || auth.token.email === 'pixieblooms2512@gmail.com')",
         ".validate": "newData.hasChildren(['title', 'content', 'theme', 'is_visible', 'order_index', 'created_at', 'updated_at'])",
         "title": {
           ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 200"

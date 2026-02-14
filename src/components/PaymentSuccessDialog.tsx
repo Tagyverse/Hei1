@@ -1,4 +1,7 @@
-import { X, CheckCircle, Download } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, CheckCircle, Download, File } from 'lucide-react';
+import { db } from '../lib/firebase';
+import { ref, get } from 'firebase/database';
 
 interface PaymentSuccessDialogProps {
   isOpen: boolean;
@@ -16,6 +19,37 @@ export default function PaymentSuccessDialog({
   onClose,
   orderDetails
 }: PaymentSuccessDialogProps) {
+  const [billImageUrl, setBillImageUrl] = useState<string | null>(null);
+  const [loadingBill, setLoadingBill] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && orderDetails?.orderId) {
+      loadBillImage();
+    }
+  }, [isOpen, orderDetails?.orderId]);
+
+  const loadBillImage = async () => {
+    if (!orderDetails?.orderId) return;
+    
+    setLoadingBill(true);
+    try {
+      const orderRef = ref(db, `orders/${orderDetails.orderId}`);
+      const snapshot = await get(orderRef);
+      
+      if (snapshot.exists()) {
+        const orderData = snapshot.val();
+        if (orderData.bill_image_url) {
+          setBillImageUrl(orderData.bill_image_url);
+          console.log('[v0] Bill image loaded from Firebase');
+        }
+      }
+    } catch (error) {
+      console.error('[v0] Error loading bill image:', error);
+    } finally {
+      setLoadingBill(false);
+    }
+  };
+
   if (!isOpen) {
     return null;
   }
@@ -75,6 +109,27 @@ export default function PaymentSuccessDialog({
               Your order has been confirmed and is being processed!
             </p>
           </div>
+
+          {billImageUrl && (
+            <div className="bg-white rounded-xl border-2 border-black overflow-hidden">
+              <div className="p-3 md:p-4 border-b-2 border-black flex items-center gap-2">
+                <File className="w-4 h-4 md:w-5 md:h-5 text-black" />
+                <p className="text-xs md:text-sm text-black font-bold">Order Invoice</p>
+              </div>
+              <img 
+                src={billImageUrl} 
+                alt="Order Invoice" 
+                className="w-full h-auto max-h-64 md:max-h-96 object-cover"
+              />
+            </div>
+          )}
+
+          {loadingBill && (
+            <div className="bg-white rounded-xl p-4 border-2 border-black flex items-center justify-center">
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-black border-t-transparent"></div>
+              <span className="text-xs md:text-sm text-black font-medium ml-2">Loading invoice...</span>
+            </div>
+          )}
 
           <div className="bg-white rounded-xl p-3 md:p-4 border-2 border-black">
             <p className="text-xs md:text-sm text-black font-medium">

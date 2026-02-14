@@ -32,7 +32,12 @@ const getEmbedUrl = (url: string): string => {
 };
 
 export default function VideoSection({ videos, title, subtitle }: VideoSectionProps) {
-  if (videos.length === 0) return null;
+  console.log('[v0] VideoSection rendering with videos:', videos.length);
+  
+  if (!videos || videos.length === 0) {
+    console.log('[v0] No videos to display');
+    return null;
+  }
 
   return (
     <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-b from-white to-gray-50">
@@ -54,7 +59,7 @@ export default function VideoSection({ videos, title, subtitle }: VideoSectionPr
             ? 'grid-cols-1 max-w-4xl mx-auto'
             : 'grid-cols-1 md:grid-cols-2'
         }`}>
-          {videos.map((video) => (
+          {videos.filter(video => video.url).map((video) => (
             <div
               key={video.id}
               className="group bg-white rounded-2xl overflow-hidden border-2 border-gray-200 hover:border-purple-400 transition-all duration-300 hover:shadow-xl"
