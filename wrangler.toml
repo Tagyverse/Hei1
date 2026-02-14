@@ -1,0 +1,65 @@
+name = "pixieblooms2"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = "dist"
+
+# ⚠️ IMPORTANT: wrangler.toml is the SOURCE OF TRUTH
+#
+# The dashboard message "Bindings managed through wrangler.toml" is CORRECT.
+# You CANNOT add bindings manually in the dashboard when using wrangler.toml.
+#
+# These bindings WILL be applied automatically on your next deployment.
+#
+# Required setup:
+# 1. Create R2 bucket named "pixie-blooms-images" in your Cloudflare R2 dashboard
+# 2. KV namespace with ID below already exists
+# 3. Push this file to git - bindings apply automatically
+
+[[kv_namespaces]]
+binding = "ANALYTICS_KV"
+id = "ba6101c8b9044469a2981a20bc87ac27"
+
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "pixie-blooms-images"
+preview_bucket_name = "pixie-blooms-images"
+
+# Local development environment variables
+[vars]
+RAZORPAY_KEY_ID = "rzp_live_RsbDbcZ82rrFGa"
+RAZORPAY_KEY_SECRET = "8ZyU7s80bLjjroAUkeu3COj6"
+CLOUDFLARE_ACCOUNT_ID = "06733e3098d1ab1474045b028939f839"
+CLOUDFLARE_ANALYTICS_TOKEN = "8LxUm7_Bu8oZPq0qjMZdACpJeCNxtgasw8OOv0PR"
+
+# Production environment
+[env.production]
+
+[[env.production.kv_namespaces]]
+binding = "ANALYTICS_KV"
+id = "ba6101c8b9044469a2981a20bc87ac27"
+
+[[env.production.r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "pixie-blooms-images"
+
+[env.production.vars]
+RAZORPAY_KEY_ID = "rzp_live_RsbDbcZ82rrFGa"
+RAZORPAY_KEY_SECRET = "8ZyU7s80bLjjroAUkeu3COj6"
+CLOUDFLARE_ACCOUNT_ID = "06733e3098d1ab1474045b028939f839"
+CLOUDFLARE_ANALYTICS_TOKEN = "8LxUm7_Bu8oZPq0qjMZdACpJeCNxtgasw8OOv0PR"
+
+# Preview environment
+[env.preview]
+
+[[env.preview.kv_namespaces]]
+binding = "ANALYTICS_KV"
+id = "ba6101c8b9044469a2981a20bc87ac27"
+
+[[env.preview.r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "pixie-blooms-images"
+
+[env.preview.vars]
+RAZORPAY_KEY_ID = "rzp_live_RsbDbcZ82rrFGa"
+RAZORPAY_KEY_SECRET = "8ZyU7s80bLjjroAUkeu3COj6"
+CLOUDFLARE_ACCOUNT_ID = "06733e3098d1ab1474045b028939f839"
+CLOUDFLARE_ANALYTICS_TOKEN = "8LxUm7_Bu8oZPq0qjMZdACpJeCNxtgasw8OOv0PR"

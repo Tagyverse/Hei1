@@ -1,0 +1,110 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidImageFile() {
+      return request.resource.contentType.matches('image/.*') &&
+             request.resource.size < 5 * 1024 * 1024;
+    }
+
+    function isValidDocumentFile() {
+      return (request.resource.contentType.matches('application/pdf') ||
+              request.resource.contentType.matches('image/.*')) &&
+             request.resource.size < 10 * 1024 * 1024;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+
+    match /products/{productId}/{fileName} {
+      allow read: if true;
+
+      allow create, update, delete: if isAuthenticated() &&
+                                       isValidImageFile();
+    }
+
+    match /categories/{categoryId}/{fileName} {
+      allow read: if true;
+
+      allow create, update, delete: if isAuthenticated() &&
+                                       isValidImageFile();
+    }
+
+    match /carousel/{imageId} {
+      allow read: if true;
+
+      allow create, update, delete: if isAuthenticated() &&
+                                       isValidImageFile();
+    }
+
+    match /images/{fileName} {
+      allow read: if true;
+
+      allow create, update, delete: if isAuthenticated() &&
+                                       isValidImageFile();
+    }
+
+    match /users/{userId}/{fileName} {
+      allow read: if isOwner(userId) || isAuthenticated();
+
+      allow create, update, delete: if isOwner(userId) &&
+                                       isValidImageFile();
+    }
+
+    match /orders/{orderId}/{fileName} {
+      allow read: if isAuthenticated();
+
+      allow create: if isAuthenticated() &&
+                       isValidDocumentFile();
+
+      allow update, delete: if isAuthenticated();
+    }
+
+    match /reviews/{reviewId}/{fileName} {
+      allow read: if true;
+
+      allow create, update, delete: if isAuthenticated() &&
+                                       isValidImageFile();
+    }
+
+    match /temp/{userId}/{fileName} {
+      allow read, delete: if isOwner(userId);
+
+      allow create, update: if isOwner(userId) &&
+                               request.resource.size < 10 * 1024 * 1024;
+    }
+
+    match /backups/{fileName} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /public/{fileName} {
+      allow read: if true;
+
+      allow create, update, delete: if isAuthenticated() &&
+                                       request.resource.size < 5 * 1024 * 1024;
+    }
+
+    match /admin/{adminId}/{fileName} {
+      allow read, write: if isAuthenticated() &&
+                            request.resource.size < 10 * 1024 * 1024;
+    }
+
+    match /try_on_models/{fileName} {
+      allow read: if true;
+
+      allow create, update, delete: if isAuthenticated() &&
+                                       isValidImageFile();
+    }
+  }
+}
