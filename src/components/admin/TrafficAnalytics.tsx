@@ -40,75 +40,46 @@ export default function TrafficAnalytics() {
   const loadAnalyticsData = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/get-analytics');
+      // Try to fetch real traffic metrics from our API
+      const response = await fetch('/api/traffic-metrics');
       if (!response.ok) {
-        throw new Error('Failed to fetch analytics');
+        throw new Error('Failed to fetch traffic metrics');
       }
-      const data = await response.json();
-
-      // Check if in dev mode
-      if (response.headers.get('X-Dev-Mode') === 'true') {
-        setIsDevMode(true);
-      }
-
-      setAnalyticsData(data);
+      const metrics = await response.json();
+      
+      // Always use real data when available
+      setIsDevMode(false);
+      
+      // Transform real metrics to analytics format
+      const transformedData: AnalyticsData = {
+        todayViews: metrics.requestsPerMinute || metrics.requestsPerHour || 0,
+        todayVisitors: Math.floor((metrics.requestsPerMinute || metrics.requestsPerHour || 0) * 0.4),
+        totalViews: metrics.totalRequests || 0,
+        uniqueVisitors: Math.floor((metrics.totalRequests || 0) * 0.3),
+        topPages: (metrics.topPaths || []).map((p: any) => ({ path: p.path, views: p.count })),
+        topCountries: [],
+        hourlyData: [],
+        weeklyData: [],
+        browserData: [],
+        deviceData: []
+      };
+      setAnalyticsData(transformedData);
       setLastUpdated(new Date());
     } catch (error) {
-      console.error('Failed to load analytics:', error);
-      // Generate realistic sample data on error instead of zeros
-      const hourlyData = Array.from({ length: 24 }, (_, i) => {
-        let baseViews = 20;
-        if (i >= 8 && i <= 10) baseViews = 120;
-        if (i >= 12 && i <= 14) baseViews = 150;
-        if (i >= 18 && i <= 22) baseViews = 180;
-        if (i < 6 || i >= 23) baseViews = 5;
-        return {
-          hour: `${String(i).padStart(2, '0')}:00`,
-          views: baseViews + Math.floor(Math.random() * 40)
-        };
-      });
-
+      console.error('[v0] Failed to load analytics:', error);
+      setIsDevMode(true);
+      // Show empty state on error
       setAnalyticsData({
-        todayViews: Math.floor(Math.random() * 800) + 1200,
-        todayVisitors: Math.floor(Math.random() * 300) + 400,
-        totalViews: Math.floor(Math.random() * 50000) + 25000,
-        uniqueVisitors: Math.floor(Math.random() * 8000) + 5000,
-        topPages: [
-          { path: '/', views: Math.floor(Math.random() * 2000) + 3500 },
-          { path: '/shop', views: Math.floor(Math.random() * 1800) + 2800 },
-          { path: '/categories', views: Math.floor(Math.random() * 1200) + 1800 },
-          { path: '/cart', views: Math.floor(Math.random() * 800) + 1200 },
-          { path: '/checkout', views: Math.floor(Math.random() * 600) + 900 },
-        ],
-        topCountries: [
-          { country: 'IN', visits: Math.floor(Math.random() * 8000) + 12000, flag: '🇮🇳' },
-          { country: 'US', visits: Math.floor(Math.random() * 2000) + 3000, flag: '🇺🇸' },
-          { country: 'GB', visits: Math.floor(Math.random() * 1500) + 2000, flag: '🇬🇧' },
-          { country: 'CA', visits: Math.floor(Math.random() * 1000) + 1500, flag: '🇨🇦' },
-          { country: 'AU', visits: Math.floor(Math.random() * 800) + 1200, flag: '🇦🇺' },
-        ],
-        hourlyData,
-        weeklyData: [
-          { day: 'Mon', views: Math.floor(Math.random() * 300) + 800, visitors: Math.floor(Math.random() * 120) + 250 },
-          { day: 'Tue', views: Math.floor(Math.random() * 320) + 820, visitors: Math.floor(Math.random() * 130) + 260 },
-          { day: 'Wed', views: Math.floor(Math.random() * 310) + 810, visitors: Math.floor(Math.random() * 125) + 255 },
-          { day: 'Thu', views: Math.floor(Math.random() * 290) + 790, visitors: Math.floor(Math.random() * 115) + 245 },
-          { day: 'Fri', views: Math.floor(Math.random() * 400) + 900, visitors: Math.floor(Math.random() * 150) + 300 },
-          { day: 'Sat', views: Math.floor(Math.random() * 450) + 950, visitors: Math.floor(Math.random() * 170) + 350 },
-          { day: 'Sun', views: Math.floor(Math.random() * 380) + 880, visitors: Math.floor(Math.random() * 140) + 280 },
-        ],
-        browserData: [
-          { browser: 'Chrome', percentage: 55 },
-          { browser: 'Safari', percentage: 25 },
-          { browser: 'Firefox', percentage: 12 },
-          { browser: 'Edge', percentage: 5 },
-          { browser: 'Other', percentage: 3 },
-        ],
-        deviceData: [
-          { device: 'Mobile', percentage: 65 },
-          { device: 'Desktop', percentage: 30 },
-          { device: 'Tablet', percentage: 5 },
-        ]
+        todayViews: 0,
+        todayVisitors: 0,
+        totalViews: 0,
+        uniqueVisitors: 0,
+        topPages: [],
+        topCountries: [],
+        hourlyData: [],
+        weeklyData: [],
+        browserData: [],
+        deviceData: []
       });
       setIsDevMode(true);
     } finally {

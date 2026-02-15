@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { generateOptimizedImageUrl, preloadImage } from '../utils/imageOptimization';
 
 interface OptimizedImageProps {
   src: string;
@@ -7,6 +8,9 @@ interface OptimizedImageProps {
   onClick?: () => void;
   priority?: boolean; // Load immediately without lazy loading
   sizes?: string; // Responsive image sizes
+  width?: number; // Image width for optimization
+  height?: number; // Image height for optimization
+  quality?: number; // Image quality (1-100)
 }
 
 /**
@@ -19,12 +23,43 @@ export default function OptimizedImage({
   className = '', 
   onClick,
   priority = false,
-  sizes = '100vw'
+  sizes = '100vw',
+  width,
+  height,
+  quality = 80
 }: OptimizedImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(priority);
   const [error, setError] = useState(false);
   const imgRef = useRef<HTMLDivElement>(null);
+
+  // Generate optimized URL with dimensions and quality
+  let optimizedSrc = generateOptimizedImageUrl(src, width, height, quality);
+  
+  // If it's an R2 URL (external domain), serve through proxy for CORS
+  if (optimizedSrc && !optimizedSrc.startsWith('data:') && !optimizedSrc.startsWith('/')) {
+    try {
+      const imageUrl = new URL(optimizedSrc);
+      if (imageUrl.hostname.includes('r2.') || imageUrl.hostname.includes('cloudflare')) {
+        // Use our proxy endpoint to serve R2 images with proper CORS
+        const proxyUrl = new URL('/api/serve-image', window.location.origin);
+        proxyUrl.searchParams.append('url', optimizedSrc);
+        if (width) proxyUrl.searchParams.append('width', String(width));
+        if (height) proxyUrl.searchParams.append('height', String(height));
+        if (quality) proxyUrl.searchParams.append('quality', String(quality));
+        optimizedSrc = proxyUrl.toString();
+      }
+    } catch (e) {
+      console.warn('[v0] Could not parse image URL for proxy:', optimizedSrc);
+    }
+  }
+
+  useEffect(() => {
+    // Preload priority images
+    if (priority) {
+      preloadImage(optimizedSrc);
+    }
+  }, [priority, optimizedSrc]);
 
   useEffect(() => {
     if (priority || !imgRef.current) return;
@@ -97,7 +132,7 @@ export default function OptimizedImage({
             <source srcSet={webpSrc} type="image/webp" />
           )}
           <img
-            src={src}
+            src={optimizedSrc}
             alt={alt}
             className={`${className} w-full h-full object-cover transition-all duration-500 ease-out ${
               !isLoaded
@@ -107,6 +142,8 @@ export default function OptimizedImage({
             loading={priority ? 'eager' : 'lazy'}
             decoding="async"
             sizes={sizes}
+            width={width}
+            height={height}
             onLoad={() => setIsLoaded(true)}
             onError={handleError}
             onClick={onClick}

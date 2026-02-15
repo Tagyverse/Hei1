@@ -36,6 +36,7 @@ import { initAnalytics, trackPageView } from './utils/analytics';
 import { initPerformanceMonitoring } from './utils/performanceMonitoring';
 import { initFetchInterceptor } from './utils/fetchInterceptor';
 import { enableSmoothScrollCSS } from './utils/smoothScroll';
+import { useTrafficTracking } from './hooks/useTrafficTracking';
 import PageLoader from './components/PageLoader';
 
 type Page = 'home' | 'shop' | 'admin' | 'checkout' | 'superadmin' | 'privacy-policy' | 'shipping-policy' | 'refund-policy' | 'contact';
@@ -106,6 +107,9 @@ function AppContent() {
   const [appReady, setAppReady] = useState(false);
   const [temporarilyClosed, setTemporarilyClosed] = useState(false);
   const [showWelcomeBanner, setShowWelcomeBanner] = useState(true);
+
+  // Enable traffic tracking for all pages
+  useTrafficTracking();
 
   const hideNavigation = currentPage === 'admin' || currentPage === 'checkout' || currentPage === 'superadmin' || currentPage === 'privacy-policy' || currentPage === 'shipping-policy' || currentPage === 'refund-policy' || currentPage === 'contact';
   const isAdminPage = currentPage === 'admin' || currentPage === 'superadmin';

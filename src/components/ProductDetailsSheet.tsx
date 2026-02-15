@@ -6,6 +6,7 @@ import { useCart } from '../contexts/CartContext';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { usePublishedData } from '../contexts/PublishedDataContext';
 import { objectToArray } from '../utils/publishedData';
+import { getProxiedImageUrl } from '../utils/imageUrlHandler';
 import LazyImage from './LazyImage';
 import VirtualTryOn from './VirtualTryOn';
 import DressColorMatcher from './DressColorMatcher';
@@ -46,6 +47,8 @@ const getColorCode = (colorName: string): string => {
   const normalized = colorName.toLowerCase().trim();
   return colorMap[normalized] || '#9CA3AF';
 };
+
+
 
 export default function ProductDetailsSheet({ product, isOpen, onClose, onCartClick }: ProductDetailsSheetProps) {
   const { data: publishedData } = usePublishedData();
@@ -395,7 +398,7 @@ export default function ProductDetailsSheet({ product, isOpen, onClose, onCartCl
                       onTouchEnd={handleTouchEnd}
                     >
                       <LazyImage
-                        src={allImages[currentImageIndex]}
+                        src={getProxiedImageUrl(allImages[currentImageIndex])}
                         alt={product.name}
                         className="w-full h-full object-cover cursor-zoom-in transition-transform duration-300"
                         onClick={() => setFullScreenImage(allImages[currentImageIndex])}
@@ -556,9 +559,14 @@ export default function ProductDetailsSheet({ product, isOpen, onClose, onCartCl
                           } : {}}
                         >
                           <img
-                            src={image}
+                            src={getProxiedImageUrl(image)}
                             alt={`${product.name} ${index + 1}`}
                             className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fallback if proxy fails
+                              const img = e.target as HTMLImageElement;
+                              img.src = image;
+                            }}
                           />
                         </button>
                       ))}
@@ -1058,10 +1066,15 @@ export default function ProductDetailsSheet({ product, isOpen, onClose, onCartCl
 
           <div className="relative max-w-6xl max-h-full animate-scaleIn">
             <img
-              src={fullScreenImage}
+              src={getProxiedImageUrl(fullScreenImage)}
               alt={product.name}
               className="max-w-full max-h-[90vh] object-contain rounded-xl border-4 border-white/10"
               onClick={(e) => e.stopPropagation()}
+              onError={(e) => {
+                // Fallback if proxy fails
+                const img = e.target as HTMLImageElement;
+                img.src = fullScreenImage;
+              }}
             />
 
             {allImages.length > 1 && (

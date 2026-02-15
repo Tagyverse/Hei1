@@ -91,7 +91,7 @@ export default function Home({ onNavigate, onCartClick }: HomeProps) {
     customer_reviews: false,
     marquee: false
   });
-  const [allSectionsOrder, setAllSectionsOrder] = useState<Array<{ id: string; type: 'default' | 'custom' | 'info' | 'video' | 'marquee'; order_index: number }>>([]);
+  const [allSectionsOrder, setAllSectionsOrder] = useState<Array<{ id: string; type: 'default' | 'custom' | 'info' | 'video' | 'video_section' | 'marquee' | 'video_overlay'; order_index: number }>>([]);
   const [showSmartFeatureFAB, setShowSmartFeatureFAB] = useState(false);
   const [showTryOn, setShowTryOn] = useState(false);
   const [showColorMatchList, setShowColorMatchList] = useState(false);
@@ -214,31 +214,34 @@ export default function Home({ onNavigate, onCartClick }: HomeProps) {
             console.log('[v0] Video section settings:', videoSettings);
           }
 
-          const videoOverlaySectionsData: any[] = [];
-          if (publishedData.video_overlay_sections) {
-            for (const [sectionId, sectionData] of Object.entries<any>(publishedData.video_overlay_sections)) {
-              if (sectionData.is_visible && sectionData.videos) {
-                const sectionVideos: any[] = [];
-                if (publishedData.video_overlay_items) {
-                  sectionData.videos.forEach((videoId: string) => {
-                    if (publishedData.video_overlay_items![videoId] && publishedData.video_overlay_items![videoId].isVisible) {
-                      sectionVideos.push({ id: videoId, ...publishedData.video_overlay_items![videoId] });
-                    }
-                  });
-                  sectionVideos.sort((a, b) => a.order - b.order);
-                }
-                if (sectionVideos.length > 0) {
-                  videoOverlaySectionsData.push({
-                    id: sectionId,
-                    ...sectionData,
-                    videoItems: sectionVideos
-                  });
-                }
-              }
+  const videoOverlaySectionsData: any[] = [];
+  if (publishedData.video_overlay_sections) {
+    for (const [sectionId, sectionData] of Object.entries<any>(publishedData.video_overlay_sections)) {
+      if (sectionData.is_visible && sectionData.videos) {
+        const sectionVideos: any[] = [];
+        if (publishedData.video_overlay_items) {
+          sectionData.videos.forEach((videoId: string) => {
+            if (publishedData.video_overlay_items![videoId] && publishedData.video_overlay_items![videoId].isVisible) {
+              const videoData = {
+                id: videoId,
+                ...publishedData.video_overlay_items![videoId]
+              };
+              sectionVideos.push(videoData);
             }
-            videoOverlaySectionsData.sort((a, b) => a.order_index - b.order_index);
-          }
-          setVideoOverlaySections(videoOverlaySectionsData);
+          });
+        }
+        if (sectionVideos.length > 0) {
+          videoOverlaySectionsData.push({
+            id: sectionId,
+            ...sectionData,
+            videoItems: sectionVideos
+          });
+        }
+      }
+    }
+    videoOverlaySectionsData.sort((a, b) => a.order_index - b.order_index);
+  }
+  setVideoOverlaySections(videoOverlaySectionsData);
 
           setFeaturedProducts(featuredProducts);
           setCategories(categoriesData);
@@ -293,12 +296,16 @@ export default function Home({ onNavigate, onCartClick }: HomeProps) {
             });
           }
           
-          // Add video sections
-          if (publishedData.video_section_settings?.is_visible) {
-            allSectionsOrderData.push({
-              id: 'video_section',
-              type: 'video',
-              order_index: publishedData.video_section_settings.order_index || 7
+          // Add individual video sections from published data
+          if (publishedData.video_sections) {
+            Object.entries(publishedData.video_sections).forEach(([id, sectionData]: [string, any]) => {
+              if (sectionData.is_visible) {
+                allSectionsOrderData.push({
+                  id,
+                  type: 'video_section',
+                  order_index: sectionData.order_index || 7
+                });
+              }
             });
           }
           
@@ -309,6 +316,19 @@ export default function Home({ onNavigate, onCartClick }: HomeProps) {
                 allSectionsOrderData.push({
                   id,
                   type: 'marquee',
+                  order_index: sectionData.order_index || 100
+                });
+              }
+            });
+          }
+          
+          // Add video overlay sections
+          if (publishedData.video_overlay_sections) {
+            Object.entries(publishedData.video_overlay_sections).forEach(([id, sectionData]: [string, any]) => {
+              if (sectionData.is_visible) {
+                allSectionsOrderData.push({
+                  id,
+                  type: 'video_overlay',
                   order_index: sectionData.order_index || 100
                 });
               }
@@ -596,6 +616,14 @@ export default function Home({ onNavigate, onCartClick }: HomeProps) {
             />
           )}
 
+          {section.type === 'video_section' && videoSections.length > 0 && (
+            <VideoSection
+              videos={videoSections}
+              title={videoSectionSettings.section_title}
+              subtitle={videoSectionSettings.section_subtitle}
+            />
+          )}
+
           {section.type === 'marquee' && marqueeSections.find(s => s.id === section.id) && (
             <div
               className="w-full overflow-hidden py-3"
@@ -608,6 +636,10 @@ export default function Home({ onNavigate, onCartClick }: HomeProps) {
                 <span className="inline-block px-4 text-lg font-semibold">{marqueeSections.find(s => s.id === section.id)!.text}</span>
               </div>
             </div>
+          )}
+
+          {section.type === 'video_overlay' && videoOverlaySections.find(s => s.id === section.id) && (
+            <VideoOverlaySection videos={videoOverlaySections.find(s => s.id === section.id)?.videoItems || []} />
           )}
         </section>
       ))}

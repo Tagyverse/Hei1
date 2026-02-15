@@ -95,7 +95,7 @@ export default function Admin() {
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showOfferForm, setShowOfferForm] = useState(false);
-  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'offers' | 'orders' | 'carousel' | 'marquee' | 'sections' | 'card-design' | 'banner-social' | 'navigation' | 'coupons' | 'bulk-operations' | 'try-on' | 'tax' | 'footer' | 'ai-assistant' | 'traffic' | 'gallery' | 'bill-customizer' | 'settings' | 'publish'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'offers' | 'orders' | 'carousel' | 'marquee' | 'video-sections' | 'sections' | 'card-design' | 'banner-social' | 'navigation' | 'coupons' | 'bulk-operations' | 'try-on' | 'tax' | 'footer' | 'ai-assistant' | 'traffic' | 'gallery' | 'bill-customizer' | 'settings' | 'publish'>('products');
   const [isPublishing, setIsPublishing] = useState(false);
   const [lastPublished, setLastPublished] = useState<string | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -1496,6 +1496,25 @@ Users will now see the updated content.`;
               <div className="flex items-center gap-2">
                 <Type className="w-4 h-4 sm:w-5 sm:h-5" />
                 Marquee
+              </div>
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('video-sections');
+                setShowForm(false);
+                setShowCategoryForm(false);
+                setShowReviewForm(false);
+                setShowOfferForm(false);
+              }}
+              className={`pb-4 px-4 sm:px-6 font-bold transition-colors whitespace-nowrap text-sm sm:text-base ${
+                activeTab === 'video-sections'
+                  ? 'border-b-4 border-teal-500 text-teal-600'
+                  : 'text-gray-600 hover:text-teal-600'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Video className="w-4 h-4 sm:w-5 sm:h-5" />
+                Video Sections
               </div>
             </button>
             <button
@@ -3107,32 +3126,16 @@ Users will now see the updated content.`;
             </div>
           )}
 
-          {activeTab === 'sections' && (
+          {activeTab === 'video-sections' && (
             <div className="space-y-6">
-              <div className="bg-gradient-to-r from-teal-500 to-teal-600 rounded-2xl p-6 sm:p-8 text-white">
-                <div className="flex items-center gap-4 mb-3">
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                    <Layers className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold">Homepage Sections</h2>
-                    <p className="text-white/90 mt-1">Manage dynamic sections on your homepage</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-2xl p-6 border-2 border-teal-200">
-                <SectionManager />
-              </div>
-
-              <div className="bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl p-6 sm:p-8 text-white mt-6">
+              <div className="bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl p-6 sm:p-8 text-white">
                 <div className="flex items-center gap-4 mb-3">
                   <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
                     <Video className="w-6 h-6" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold">Video Section</h2>
-                    <p className="text-white/90 mt-1">Add YouTube/Vimeo videos to your homepage</p>
+                    <h2 className="text-2xl font-bold">Video Sections</h2>
+                    <p className="text-white/90 mt-1">Add and manage YouTube/Vimeo videos on your homepage</p>
                   </div>
                 </div>
               </div>
@@ -3155,6 +3158,26 @@ Users will now see the updated content.`;
 
               <div className="bg-white rounded-2xl p-6 border-2 border-blue-200">
                 <VideoOverlayManager />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'sections' && (
+            <div className="space-y-6">
+              <div className="bg-gradient-to-r from-teal-500 to-teal-600 rounded-2xl p-6 sm:p-8 text-white">
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <Layers className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">Homepage Sections</h2>
+                    <p className="text-white/90 mt-1">Manage dynamic sections on your homepage</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 border-2 border-teal-200">
+                <SectionManager />
               </div>
             </div>
           )}

@@ -165,6 +165,7 @@ export default function FooterManager() {
     accentColor: '#10B981',
     companyName: 'Pixie Blooms',
     description: 'We provide the best products and services to our customers.',
+    aboutUs: 'Welcome to Pixie Blooms, where elegance meets craftsmanship. We specialize in handcrafted floral baby headbands, hair clips, and custom accessories designed to add a magical touch to every little moment.',
     email: 'pixieblooms2512@gmail.com',
     phone: '+1 234 567 8900',
     address: '123 Main Street, City, Country',
@@ -186,6 +187,7 @@ export default function FooterManager() {
     showQuickLinks: true,
     showSocial: true,
     showContact: true,
+    showAboutUs: true,
   });
 
   const [loading, setLoading] = useState(true);
@@ -241,6 +243,7 @@ export default function FooterManager() {
             accentColor: data.accentColor || prevConfig.accentColor,
             companyName: data.companyName || prevConfig.companyName,
             description: data.description || prevConfig.description,
+            aboutUs: data.aboutUs || prevConfig.aboutUs,
             email: data.email || prevConfig.email,
             phone: data.phone || prevConfig.phone,
             address: data.address || prevConfig.address,
@@ -250,6 +253,7 @@ export default function FooterManager() {
             showQuickLinks: data.showQuickLinks !== undefined ? data.showQuickLinks : prevConfig.showQuickLinks,
             showSocial: data.showSocial !== undefined ? data.showSocial : prevConfig.showSocial,
             showContact: data.showContact !== undefined ? data.showContact : prevConfig.showContact,
+            showAboutUs: data.showAboutUs !== undefined ? data.showAboutUs : prevConfig.showAboutUs,
           };
         });
       }
@@ -460,13 +464,34 @@ export default function FooterManager() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description (Short)</label>
             <textarea
               value={config.description}
               onChange={(e) => setConfig({ ...config, description: e.target.value })}
-              rows={3}
+              rows={2}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             />
+          </div>
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">About Us Story</label>
+              <button
+                onClick={() => setConfig({ ...config, showAboutUs: !config.showAboutUs })}
+                className={`px-2 py-1 rounded-md text-xs font-medium ${
+                  config.showAboutUs ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                {config.showAboutUs ? 'Show' : 'Hide'}
+              </button>
+            </div>
+            <textarea
+              value={config.aboutUs || ''}
+              onChange={(e) => setConfig({ ...config, aboutUs: e.target.value })}
+              rows={4}
+              placeholder="Enter your brand's story and mission..."
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            />
+            <p className="text-xs text-gray-500 mt-2">This will be displayed in the footer under your company name</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Copyright Text</label>

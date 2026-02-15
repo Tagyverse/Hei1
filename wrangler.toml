@@ -11,17 +11,22 @@ pages_build_output_dir = "dist"
 #
 # Required setup:
 # 1. Create R2 bucket named "pixie-blooms-images" in your Cloudflare R2 dashboard
-# 2. KV namespace with ID below already exists
+# 2. Analytics Engine is enabled by default
 # 3. Push this file to git - bindings apply automatically
-
-[[kv_namespaces]]
-binding = "ANALYTICS_KV"
-id = "ba6101c8b9044469a2981a20bc87ac27"
+# 
+# OPTIMIZATION NOTE:
+# - KV is no longer used for traffic tracking (migrated to in-memory cache + Analytics Engine)
+# - This reduces costs and improves performance significantly
+# - Traffic metrics are still available via Analytics Engine for historical analysis
 
 [[r2_buckets]]
 binding = "R2_BUCKET"
 bucket_name = "pixie-blooms-images"
 preview_bucket_name = "pixie-blooms-images"
+
+# Analytics Engine binding for high-volume traffic tracking
+[[analytics_engine_datasets]]
+binding = "TRAFFIC_ANALYTICS"
 
 # Local development environment variables
 [vars]
@@ -33,13 +38,12 @@ CLOUDFLARE_ANALYTICS_TOKEN = "8LxUm7_Bu8oZPq0qjMZdACpJeCNxtgasw8OOv0PR"
 # Production environment
 [env.production]
 
-[[env.production.kv_namespaces]]
-binding = "ANALYTICS_KV"
-id = "ba6101c8b9044469a2981a20bc87ac27"
-
 [[env.production.r2_buckets]]
 binding = "R2_BUCKET"
 bucket_name = "pixie-blooms-images"
+
+[[env.production.analytics_engine_datasets]]
+binding = "TRAFFIC_ANALYTICS"
 
 [env.production.vars]
 RAZORPAY_KEY_ID = "rzp_live_RsbDbcZ82rrFGa"
@@ -50,13 +54,12 @@ CLOUDFLARE_ANALYTICS_TOKEN = "8LxUm7_Bu8oZPq0qjMZdACpJeCNxtgasw8OOv0PR"
 # Preview environment
 [env.preview]
 
-[[env.preview.kv_namespaces]]
-binding = "ANALYTICS_KV"
-id = "ba6101c8b9044469a2981a20bc87ac27"
-
 [[env.preview.r2_buckets]]
 binding = "R2_BUCKET"
 bucket_name = "pixie-blooms-images"
+
+[[env.preview.analytics_engine_datasets]]
+binding = "TRAFFIC_ANALYTICS"
 
 [env.preview.vars]
 RAZORPAY_KEY_ID = "rzp_live_RsbDbcZ82rrFGa"

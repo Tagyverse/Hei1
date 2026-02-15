@@ -12,6 +12,7 @@ interface FooterConfig {
   accentColor: string;
   companyName: string;
   description: string;
+  aboutUs?: string;
   email: string;
   phone: string;
   address: string;
@@ -27,6 +28,7 @@ interface FooterConfig {
   showQuickLinks: boolean;
   showSocial: boolean;
   showContact: boolean;
+  showAboutUs?: boolean;
 }
 
 interface FooterProps {
@@ -82,6 +84,20 @@ export default function Footer({ onNavigate }: FooterProps) {
               {config.companyName}
             </h3>
             <p className="text-sm leading-relaxed mb-4">{config.description}</p>
+            
+            {config.showAboutUs && config.aboutUs && (
+              <div className="mt-6 pt-6 border-t" style={{ borderColor: config.accentColor + '30' }}>
+                <h4
+                  style={{ color: config.headingColor }}
+                  className="text-sm font-semibold mb-3"
+                >
+                  Our Story
+                </h4>
+                <p className="text-xs leading-relaxed" style={{ color: config.textColor, opacity: 0.9 }}>
+                  {config.aboutUs}
+                </p>
+              </div>
+            )}
           </div>
 
           {config.showQuickLinks && Array.isArray(config.quickLinks) && config.quickLinks.length > 0 && (

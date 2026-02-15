@@ -1,5 +1,6 @@
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { isValidImageUrl, normalizeImageUrl } from './imageUrlHandler';
 
 interface OrderItem {
   product_name: string;
@@ -139,7 +140,9 @@ const defaultBillSettings: BillSettings = {
 };
 
 export function generateBillHTML(order: Order, siteSettings: SiteSettings, shippingCharge: number = 0, customSettings?: BillSettings): string {
-  const s = { ...defaultBillSettings, ...customSettings };
+  // Ensure show_product_images is always true for bill generation
+  const mergedSettings = { ...defaultBillSettings, ...customSettings, show_product_images: true };
+  const s = mergedSettings;
   const orderDate = new Date(order.created_at).toLocaleDateString('en-IN', {
     day: 'numeric',
     month: 'long',
@@ -889,25 +892,39 @@ export function generateBillHTML(order: Order, siteSettings: SiteSettings, shipp
           // Build image HTML with CORS support and proper error handling
           let imageHTML = '';
           // Always try to show images by default (show_product_images defaults to true)
-          const shouldShowImages = s.show_product_images !== false; // Default true if not explicitly false
-          if (shouldShowImages && item.product_image) {
-            try {
-              // Encode URL to handle special characters
-              let encodedImageUrl = item.product_image.includes('blob:') 
-                ? item.product_image 
-                : encodeURI(item.product_image);
-              
-              // If it's an R2 image via our API, we might need to make it absolute for html2canvas
-              if (encodedImageUrl.startsWith('/api/')) {
-                encodedImageUrl = window.location.origin + encodedImageUrl;
-              }
-              
-              imageHTML = `<img src="${encodedImageUrl}" alt="${item.product_name}" class="product-image" crossorigin="anonymous" loading="eager" onload="this.style.opacity='1'" onerror="this.parentElement.style.gap='0'; this.remove();" style="opacity: 0.8;" />`;
-            } catch (e) {
-              console.warn('[v0] Error encoding image URL:', e);
-              // Fallback to direct URL if encoding fails
-              if (item.product_image) {
-                imageHTML = `<img src="${item.product_image}" alt="${item.product_name}" class="product-image" crossorigin="anonymous" loading="eager" onload="this.style.opacity='1'" onerror="this.parentElement.style.gap='0'; this.remove();" style="opacity: 0.8;" />`;
+          const shouldShowImages = s.show_product_images !== false;
+          
+          if (shouldShowImages) {
+            // Determine which image to use with validation
+            let imageUrl = null;
+            let isLogoFallback = false;
+            
+            // Try product image first
+            if (isValidImageUrl(item.product_image)) {
+              imageUrl = item.product_image;
+            } 
+            // Fall back to logo if product image is not available
+            else if (isValidImageUrl(s.logo_url)) {
+              imageUrl = s.logo_url;
+              isLogoFallback = true;
+            }
+            
+            // Only render image if we have a valid URL
+            if (imageUrl) {
+              try {
+                // Normalize the URL (make absolute if needed)
+                let finalImageUrl = normalizeImageUrl(imageUrl, window.location.origin);
+                
+                // For data URLs, use as-is; otherwise encode
+                if (!finalImageUrl.startsWith('data:')) {
+                  finalImageUrl = encodeURI(finalImageUrl);
+                }
+                
+                const altText = isLogoFallback ? 'Company Logo' : item.product_name;
+                imageHTML = `<img src="${finalImageUrl}" alt="${altText}" class="product-image" crossorigin="anonymous" loading="eager" style="opacity: 1; display: block; max-width: 80px; max-height: 80px; object-fit: contain;" onerror="this.style.display='none';" />`;
+              } catch (e) {
+                console.warn('[v0] Error processing image URL:', imageUrl, e);
+                // Silently skip image if processing fails
               }
             }
           }
@@ -1070,14 +1087,16 @@ export async function downloadBillAsPDF(order: Order, siteSettings: SiteSettings
       });
     }));
 
+    console.log('[v0] Converting bill to canvas for PDF...');
     const canvas = await html2canvas(invoiceContainer, {
       scale: 2,
       backgroundColor: '#ffffff',
-      logging: false,
+      logging: true,
       useCORS: true,
       allowTaint: true,
-      imageTimeout: 5000
+      imageTimeout: 10000
     });
+    console.log('[v0] PDF canvas created, size:', canvas.width, 'x', canvas.height);
 
     const imgWidth = 210;
     const pageHeight = 297;
@@ -1151,14 +1170,16 @@ export async function downloadBillAsJPG(order: Order, siteSettings: SiteSettings
       });
     }));
 
+    console.log('[v0] Converting bill to canvas for JPG...');
     const canvas = await html2canvas(invoiceContainer, {
       scale: 2,
       backgroundColor: '#ffffff',
-      logging: false,
+      logging: true,
       useCORS: true,
       allowTaint: true,
-      imageTimeout: 5000
+      imageTimeout: 10000
     });
+    console.log('[v0] JPG canvas created, size:', canvas.width, 'x', canvas.height);
 
     canvas.toBlob((blob) => {
       if (blob) {
